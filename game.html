@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Spin & Win Game</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+    h2 { color: #333; }
+    input { padding: 8px; margin: 5px 0; width: 100%; max-width: 300px; }
+    button { padding: 10px 20px; margin-top: 10px; font-size: 16px; cursor: pointer; }
+    #result { margin-top: 20px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>🎰 Spin & Win</h2>
+  <input type="text" id="userId" placeholder="User ID">
+  <input type="number" id="betAmount" placeholder="Enter Bet Amount (৳)">
+  <button onclick="playGame()">Play Game</button>
+  <div id="result">Result will appear here...</div>
+
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "alamin0011.firebaseapp.com",
+      projectId: "alamin0011",
+      storageBucket: "alamin0011.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function playGame() {
+      const userId = document.getElementById("userId").value;
+      const betAmount = parseFloat(document.getElementById("betAmount").value);
+      const resultDiv = document.getElementById("result");
+
+      if (!userId || isNaN(betAmount) || betAmount <= 0) {
+        alert("❌ Please enter valid User ID and Bet Amount.");
+        return;
+      }
+
+      const userRef = db.collection("users").doc(userId);
+
+      userRef.get().then((doc) => {
+        if (!doc.exists) {
+          resultDiv.innerText = "❌ User not found.";
+          return;
+        }
+
+        const balance = doc.data().balance || 0;
+
+        if (balance < betAmount) {
+          resultDiv.innerText = "❌ Insufficient balance.";
+          return;
+        }
+
+        // Deduct bet
+        userRef.update({
+          balance: firebase.firestore.FieldValue.increment(-betAmount)
+        });
+
+        // Simulate win/loss
+        const win = Math.random() < 0.5; // 50% chance
+        const reward = win ? betAmount * 2 : 0;
+
+        if (win) {
+          userRef.update({
+            balance: firebase.firestore.FieldValue.increment(reward)
+          });
+          resultDiv.innerText = `✅ You WON! Reward: ৳${reward}`;
+        } else {
+          resultDiv.innerText = `❌ You LOST! Bet deducted: ৳${betAmount}`;
+        }
+
+        // Save game result
+        db.collection("games_played").add({
+          userId,
+          gameId: "Spin & Win",
+          betAmount,
+          result: win ? "win" : "lose",
+          reward,
+          timestamp: Date.now()
+        });
+      });
+    }
+  </script>
+</body>
+</html>

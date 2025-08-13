@@ -1,0 +1,48 @@
+// auth.js
+
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "alamin0011.firebaseapp.com",
+  projectId: "alamin0011",
+  storageBucket: "alamin0011.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Register Function
+function registerUser() {
+  const email = document.getElementById("regEmail").value;
+  const password = document.getElementById("regPassword").value;
+
+  auth.createUserWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      const uid = userCredential.user.uid;
+      db.collection("users").doc(uid).set({ balance: 0 });
+      alert("✅ Registration successful!");
+    })
+    .catch((error) => {
+      alert("❌ " + error.message);
+    });
+}
+
+// Login Function
+function loginUser() {
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      const uid = userCredential.user.uid;
+      alert("✅ Login successful! UID: " + uid);
+      // You can redirect or show game panel here
+    })
+    .catch((error) => {
+      alert("❌ " + error.message);
+    });
+}

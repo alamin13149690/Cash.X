@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cash X Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>👋 Welcome to Cash X</h2>
+    <p id="userInfo">Loading user info...</p>
+    <p id="balanceInfo">Balance: ৳0</p>
+
+    <hr>
+
+    <h3>🎮 Game Access</h3>
+    <input type="number" id="betAmount" placeholder="Enter Bet Amount (৳)">
+    <button onclick="playGame()">Play Spin & Win</button>
+    <div id="result">Result will appear here...</div>
+
+    <hr>
+
+    <button onclick="logoutUser()">🚪 Logout</button>
+  </div>
+
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "alamin0011.firebaseapp.com",
+      projectId: "alamin0011",
+      storageBucket: "alamin0011.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUserId = null;
+
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        currentUserId = user.uid;
+        document.getElementById("userInfo").innerText = `Logged in as: ${user.email}`;
+        loadBalance();
+      } else {
+        window.location.href = "index.html";
+      }
+    });
+
+    function load

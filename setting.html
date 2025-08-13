@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cash X Settings Panel</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>⚙️ Admin Settings</h2>
+
+    <h3>🔐 Withdrawal Control</h3>
+    <button onclick="setWithdrawal(true)">✅ Unlock Withdrawals</button>
+    <button onclick="setWithdrawal(false)">🚫 Lock Withdrawals</button>
+    <p id="withdrawStatus">Loading status...</p>
+
+    <hr>
+
+    <h3>🎁 Set Global Bonus</h3>
+    <input type="number" id="bonusAmount" placeholder="Bonus Amount (৳)">
+    <button onclick="updateBonus()">Update Bonus</button>
+
+    <hr>
+
+    <h3>🤝 Set Referral Bonus</h3>
+    <input type="number" id="referralAmount" placeholder="Referral Bonus (৳)">
+    <button onclick="updateReferral()">Update Referral</button>
+  </div>
+
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "alamin0011.firebaseapp.com",
+      projectId: "alamin0011",
+      storageBucket: "alamin0011.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const settingsRef = db.collection("settings").doc("config");
+
+    // Load current withdrawal status
+    settingsRef.onSnapshot((doc) => {
+      if (doc.exists) {
+        const unlocked = doc.data().withdrawalUnlocked;
+        document.getElementById("withdrawStatus").innerText =
+          unlocked ? "✅ Withdrawals are UNLOCKED" : "🚫 Withdrawals are LOCKED";
+      }
+    });
+
+    function setWithdrawal(status) {
+      settingsRef.set({ withdrawalUnlocked: status }, { merge: true });
+    }
+
+    function updateBonus() {
+      const bonus = parseFloat(document.getElementById("bonusAmount").value);
+      if (!isNaN(bonus)) {
+        settingsRef.set({ globalBonus: bonus }, { merge: true });
+        alert("✅ Bonus updated!");
+      }
+    }
+
+    function updateReferral() {
+      const referral = parseFloat(document.getElementById("referralAmount").value);
+      if (!isNaN(referral)) {
+        settingsRef.set({ referralBonus: referral }, { merge: true });
+        alert("✅ Referral bonus updated!");
+      }
+    }
+  </script>
+</body>
+</html>

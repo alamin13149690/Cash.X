@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Withdraw Approval Panel</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+    h2 { color: #333; }
+    ul { list-style: none; padding: 0; }
+    li { background: #fff; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+    button { margin-right: 10px; padding: 6px 12px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h2>📋 Pending Withdrawals</h2>
+  <ul id="withdrawList"></ul>
+
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "alamin0011.firebaseapp.com",
+      projectId: "alamin0011",
+      storageBucket: "alamin0011.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const withdrawRef = db.collection("withdrawals");
+
+    // Show Pending Withdrawals
+    withdrawRef.where("status", "==", "pending").onSnapshot((snapshot) => {
+      const list = document.getElementById("withdrawList");
+      list.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <strong>User:</strong> ${data.userId}<br>
+          <strong>Amount:</strong> ৳${data.amount}<br>
+          <strong>Method:</strong> ${data.method}<br>
+          <strong>Account:</strong> ${data.account}<br>
+          <button onclick="approveWithdraw('${doc.id}', ${data.amount}, '${data.userId}')">✅ Approve</button>
+          <button onclick="rejectWithdraw('${doc.id}')">❌ Reject</button>
+        `;
+        list.appendChild(li);
+      });
+    });
+
+    // Approve Withdraw
+    function approveWithdraw(id, amount, userId) {
+      withdrawRef.doc(id).update({ status: "approved" });
+      const userRef = db.collection("users").doc(userId);
+      userRef.get().then((doc) => {
+        if (doc.exists) {
+          const currentBalance = doc.data().balance || 0;
+          if (currentBalance >= amount) {
+            userRef.update({
+              balance: firebase.firestore.FieldValue.increment(-amount)
+            });
+          } else {
+            alert("❌ Insufficient balance.");
+          }
+        }
+      });
+    }
+
+    // Reject Withdraw
+    function rejectWithdraw(id) {
+      withdrawRef.doc(id).update({ status: "rejected" });
+    }
+  </script>
+</body>
+</html>

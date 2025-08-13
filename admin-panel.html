@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cash X Admin Panel</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #f9f9f9; }
+    h2, h3 { color: #333; }
+    button { padding: 10px 20px; margin: 10px 0; font-size: 16px; cursor: pointer; }
+    input, select { padding: 8px; margin: 5px 0; width: 100%; max-width: 300px; }
+    #status, #gameList { margin-top: 20px; }
+    li { margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h2>🔐 Withdrawal Control</h2>
+  <button onclick="unlockWithdrawals()">✅ Unlock Withdrawals</button>
+  <button onclick="lockWithdrawals()">🚫 Lock Withdrawals</button>
+  <div id="status">Loading withdrawal status...</div>
+
+  <hr>
+
+  <h2>🎮 Game Management</h2>
+  <h3>➕ Add New Game</h3>
+  <input type="text" id="gameName" placeholder="Game Name">
+  <select id="rewardType">
+    <option value="bonus">Bonus</option>
+    <option value="cash">Cash</option>
+  </select>
+  <input type="number" id="minDeposit" placeholder="Minimum Deposit Required">
+  <button onclick="addGame()">Add Game</button>
+
+  <h3>📋 Game List</h3>
+  <ul id="gameList"></ul>
+
+  <script>
+    // Firebase Config
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "alamin0011.firebaseapp.com",
+      projectId: "alamin0011",
+      storageBucket: "alamin0011.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    // Withdrawal Control
+    const statusDiv = document.getElementById("status");
+    const withdrawalRef = db.collection("settings").doc("withdrawal_lock");
+
+    withdrawalRef.onSnapshot((doc) => {
+      if (doc.exists) {
+        const unlocked = doc.data().isUnlocked;
+        statusDiv.innerText = unlocked ? "✅ Withdrawals are UNLOCKED" : "🚫 Withdrawals are LOCKED";
+      } else {
+        statusDiv.innerText = "⚠️ No status found.";
+      }
+    });
+
+    function unlockWithdrawals() {
+      withdrawalRef.set({ isUnlocked: true });
+    }
+
+    function lockWithdrawals() {
+      withdrawalRef.set({ isUnlocked: false });
+    }
+
+    // Game Management
+    const gamesRef = db.collection("games");
+
+    function addGame() {
+      const name = document.getElementById("gameName").value;
+      const rewardType = document.getElementById("rewardType").value;
+      const minDeposit = parseInt(document.getElementById("minDeposit").value);
+
+      if (!name || isNaN(minDeposit)) {
+        alert("Please fill all fields correctly.");
+        return;
+      }
+
+      gamesRef.add({
+        name,
+        rewardType,
+        minDepositRequired: minDeposit,
+        status: "active"
+      });
+    }
+
+    function toggleGame(id, currentStatus) {
+      const newStatus = currentStatus === "active" ? "inactive" : "active";
+      gamesRef.doc(id).update({ status: newStatus });
+    }
+
+    gamesRef.onSnapshot((snapshot) => {
+      const list = document.getElementById("gameList");
+      list.innerHTML = "";
+      snapshot.forEach((doc) => {
+        const game = doc.data();
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <strong>${game.name}</strong> (${game.status}) - ${game.rewardType} reward
+          <button onclick="toggleGame('${doc.id}', '${game.status}')">Toggle</button>
+        `;
+        list.appendChild(li);
+      });
+    });
+  </script>
+</body>
+</html>
